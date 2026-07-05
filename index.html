@@ -400,7 +400,6 @@ function musicMarkup() {
     <div class="music-row">
       <div class="mini-cover" ${coverStyle}></div>
       <div><div class="music-title">${escapeHTML(state.songTitle || '제목 없음')}</div><div class="music-artist">${escapeHTML(state.songArtist || '아티스트')}</div></div>
-      <div class="music-wave">▥</div>
     </div>
     <div class="progress-row"><span>${escapeHTML(state.songElapsed)}</span><div class="progress-track"><div class="progress-fill" style="width:${state.songProgress}%"></div></div><span>${escapeHTML(state.songRemaining)}</span></div>
     <div class="music-controls"><button class="small" type="button" tabindex="-1">☆</button><button type="button" tabindex="-1">◀◀</button><button class="pause" type="button" tabindex="-1">Ⅱ</button><button type="button" tabindex="-1">▶▶</button><button class="small" type="button" tabindex="-1">◉</button></div>
