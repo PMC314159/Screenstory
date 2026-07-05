@@ -508,5 +508,156 @@ bindControls();
 renderPhone();
 
   </script>
+<style>
+  /* 음악 카드 위치 패치 */
+  #musicLayer {
+    position: absolute !important;
+    top: var(--screenstory-user-music-top, 300px) !important;
+    bottom: auto !important;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  #musicLayer:active {
+    cursor: grabbing;
+  }
+
+  /* 오른쪽 위 ▥ 아이콘 제거 */
+  #musicLayer .music-wave {
+    display: none !important;
+  }
+
+  #screenstoryMusicPosition {
+    margin-top: 13px;
+  }
+
+  #screenstoryMusicPosition.hidden {
+    display: none !important;
+  }
+</style>
+
+<script>
+(() => {
+  const musicLayer = document.getElementById('musicLayer');
+  const musicMode = document.getElementById('musicMode');
+
+  if (!musicLayer || !musicMode) return;
+
+  let musicTop = Number(localStorage.getItem('screenstory-music-top'));
+
+  if (!Number.isFinite(musicTop)) {
+    musicTop = musicMode.value === 'full' ? 132 : 300;
+  }
+
+  const modeRange = () => {
+    return musicMode.value === 'full'
+      ? { min: 95, max: 250 }
+      : { min: 150, max: 620 };
+  };
+
+  const clamp = (value) => {
+    const { min, max } = modeRange();
+    return Math.min(max, Math.max(min, value));
+  };
+
+  const musicModeLabel = musicMode.closest('label');
+
+  const control = document.createElement('label');
+  control.id = 'screenstoryMusicPosition';
+  control.innerHTML = `
+    음악 위치 <span id="screenstoryMusicPositionValue">중간</span>
+    <input id="screenstoryMusicPositionInput" type="range" />
+  `;
+
+  musicModeLabel.insertAdjacentElement('afterend', control);
+
+  const rangeInput = document.getElementById('screenstoryMusicPositionInput');
+  const rangeValue = document.getElementById('screenstoryMusicPositionValue');
+
+  function applyMusicPosition() {
+    const isOff = musicMode.value === 'none';
+    control.classList.toggle('hidden', isOff);
+
+    if (isOff) return;
+
+    musicTop = clamp(musicTop);
+
+    const { min, max } = modeRange();
+
+    rangeInput.min = min;
+    rangeInput.max = max;
+    rangeInput.value = musicTop;
+
+    musicLayer.style.setProperty(
+      '--screenstory-user-music-top',
+      `${musicTop}px`
+    );
+
+    const ratio = (musicTop - min) / (max - min);
+
+    rangeValue.textContent =
+      ratio < 0.33 ? '위쪽' :
+      ratio > 0.66 ? '아래쪽' :
+      '중간';
+
+    localStorage.setItem('screenstory-music-top', musicTop);
+  }
+
+  rangeInput.addEventListener('input', (event) => {
+    musicTop = Number(event.target.value);
+    applyMusicPosition();
+  });
+
+  musicMode.addEventListener('change', () => {
+    musicTop = musicMode.value === 'full' ? 132 : 300;
+
+    requestAnimationFrame(() => {
+      applyMusicPosition();
+    });
+  });
+
+  let dragging = null;
+
+  musicLayer.addEventListener('pointerdown', (event) => {
+    if (musicMode.value === 'none') return;
+
+    dragging = {
+      startPointerY: event.clientY,
+      startMusicTop: musicTop
+    };
+
+    musicLayer.setPointerCapture(event.pointerId);
+  });
+
+  musicLayer.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+
+    musicTop = clamp(
+      dragging.startMusicTop + event.clientY - dragging.startPointerY
+    );
+
+    applyMusicPosition();
+  });
+
+  musicLayer.addEventListener('pointerup', () => {
+    dragging = null;
+  });
+
+  musicLayer.addEventListener('pointercancel', () => {
+    dragging = null;
+  });
+
+  /* 기존 렌더가 위치를 다시 계산해도 사용자 위치를 유지 */
+  document.addEventListener('input', () => {
+    requestAnimationFrame(applyMusicPosition);
+  }, true);
+
+  document.addEventListener('change', () => {
+    requestAnimationFrame(applyMusicPosition);
+  }, true);
+
+  applyMusicPosition();
+})();
+</script>
 </body>
 </html>
