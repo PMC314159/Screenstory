@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScreenStory — Character Lock Screen Maker</title>
+  <!-- ScreenStory v4 one-file build -->
+  <style>
+:root {
+  --ink: #171515;
+  --muted: #6d6863;
+  --line: #e7e2dc;
+  --paper: #f9f7f4;
+  --apple: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #f7f5f2; color: var(--ink); font-family: var(--apple); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+.app-shell { width: min(1280px, calc(100% - 48px)); margin: 0 auto; padding: 44px 0 72px; }
+.page-header { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 0 0 26px; border-bottom: 1px solid #d7d1ca; }
+.eyebrow { letter-spacing: .16em; color: #635f5b; font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0 0 8px; }
+h1 { margin: 0; letter-spacing: -.065em; font: 500 clamp(42px, 5vw, 68px)/.92 Georgia, "Times New Roman", serif; }
+.save-button { border: 0; background: #181615; color: white; padding: 13px 22px; border-radius: 999px; box-shadow: 0 10px 30px rgba(24,22,21,.18); font-weight: 700; }
+.save-button:active { transform: translateY(1px); }
+.workspace { display: grid; grid-template-columns: minmax(300px, 460px) minmax(430px, 1fr); gap: clamp(36px, 7vw, 104px); padding-top: 36px; align-items: start; }
+.controls { background: rgba(255,255,255,.78); border: 1px solid #eee9e3; border-radius: 26px; box-shadow: 0 18px 46px rgba(50,38,28,.055); padding: 8px 22px; }
+.panel-section { padding: 22px 0 25px; border-bottom: 1px solid var(--line); }
+.panel-section:last-child { border-bottom: 0; }
+.section-heading { display: flex; align-items: center; gap: 10px; }
+.section-heading span { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: #9c9188; }
+.section-heading h2 { font-size: 16px; margin: 0; letter-spacing: -.025em; }
+.section-heading .round-add { margin-left: auto; width: 27px; height: 27px; border: 1px solid #d7d0c8; background: transparent; border-radius: 50%; color: #5a5048; font-size: 19px; line-height: 1; }
+.section-help { color: var(--muted); font-size: 12px; margin: 10px 0 12px; line-height: 1.5; }
+label { display: grid; gap: 7px; font-size: 12px; font-weight: 650; margin-top: 13px; color: #4a4540; }
+input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; border: 1px solid #ded8d1; border-radius: 11px; padding: 10px 11px; color: #211e1b; background: #fff; outline: none; }
+textarea { resize: vertical; min-height: 61px; }
+input:focus, select:focus, textarea:focus { border-color: #9b8271; box-shadow: 0 0 0 3px rgba(155,130,113,.12); }
+input[type="range"] { width: 100%; accent-color: #9a6e5d; }
+.row { display: grid; gap: 10px; }
+.row.two { grid-template-columns: 1fr 1fr; }
+.upload-box { min-height: 140px; border: 1px dashed #c9c1b9; border-radius: 17px; place-items: center; align-content: center; text-align: center; background: rgba(255,255,255,.5); margin-top: 15px; cursor: pointer; }
+.upload-box strong { font-size: 13px; }.upload-box small { color: #90877e; font-size: 11px; }.upload-plus { color: #825a4c; font-size: 28px; font-weight: 350; line-height: 1; }
+.text-button { padding: 0; background: none; border: 0; color: #81574b; text-decoration: underline; font-size: 12px; margin-top: 11px; }
+.upload-inline, .app-icon-upload { display: flex; align-items: center; justify-content: space-between; border: 1px solid #ded8d1; border-radius: 11px; padding: 10px 11px; background: #fff; cursor: pointer; }
+.upload-inline span, .app-icon-upload span { color: #835f52; font-size: 11px; }
+.notification-editor { display: grid; gap: 12px; margin-top: 15px; }
+.notification-form { padding: 14px; background: #fbfaf8; border: 1px solid #e9e3dd; border-radius: 15px; }
+.notification-form label { margin-top: 10px; }
+.notification-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.delete-notification { color: #98594f; padding: 0; background: none; border: 0; text-decoration: underline; font-size: 12px; }
+.preview-column { min-width: 0; display: grid; justify-items: center; position: sticky; top: 24px; }
+.preview-label { justify-self: start; margin-left: clamp(0px, 8vw, 108px); color: #69615a; letter-spacing: .18em; font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; margin-bottom: 18px; }
+.phone-export { padding: 10px; background: #1a1a1a; border-radius: 58px; box-shadow: 0 32px 62px rgba(27,20,16,.22); }
+.phone { width: min(430px, calc(100vw - 90px)); aspect-ratio: 430 / 932; position: relative; overflow: hidden; border-radius: 43px; background: #171719; color: white; font-family: var(--apple); isolation: isolate; }
+.wallpaper { position: absolute; inset: 0; z-index: -3; background:
+  radial-gradient(circle at 18% 16%, rgba(157,228,255,.98) 0 18%, transparent 42%),
+  radial-gradient(circle at 75% 26%, rgba(59,131,255,.92) 0 18%, transparent 45%),
+  radial-gradient(circle at 34% 74%, rgba(0,198,225,.88) 0 16%, transparent 52%),
+  linear-gradient(155deg, #d7faf0 0%, #95e6d9 34%, #0f5fc9 100%); background-size: cover; background-position: center; }
+.wallpaper-tint { position: absolute; inset: 0; z-index: -2; background: linear-gradient(180deg, rgba(0,0,0,.11), rgba(0,0,0,.02) 38%, rgba(0,0,0,.20)); pointer-events: none; }
+.status-row { position: absolute; top: 19px; left: 20px; right: 20px; height: 31px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; z-index: 5; }
+.carrier-text { font-size: 11px; font-weight: 680; text-shadow: 0 1px 4px rgba(0,0,0,.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dynamic-island { width: 111px; height: 31px; border-radius: 999px; background: #050505; display: grid; place-items: center; }
+.dynamic-island svg { width: 13px; height: 13px; stroke: #f4f4f4; stroke-width: 1.8; fill: none; }
+.status-icons { justify-self: end; display: flex; align-items: center; gap: 7px; filter: drop-shadow(0 1px 3px rgba(0,0,0,.35)); }
+.status-icons svg { width: 20px; height: 20px; fill: white; stroke: white; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.status-icons .wifi { fill: none; }
+.battery-icon { width: 25px; height: 12px; border: 1.65px solid white; border-radius: 3.5px; position: relative; padding: 1.5px; }
+.battery-icon::after { content: ""; width: 2px; height: 5px; background: white; border-radius: 0 2px 2px 0; position: absolute; right: -4px; top: 2px; }
+.battery-fill { height: 100%; width: 83%; border-radius: 1.5px; background: #fff; transition: width .2s ease; }
+.clock-zone { position: absolute; top: 74px; width: 100%; text-align: center; z-index: 2; transition: top .25s ease; }
+.date-text { font-weight: 700; font-size: 20px; letter-spacing: -.045em; text-shadow: 0 2px 7px rgba(0,0,0,.25); }
+.clock-text { font-size: 88px; font-weight: 300; letter-spacing: -.078em; line-height: .98; padding-right: 5px; text-shadow: 0 3px 8px rgba(0,0,0,.20); font-variant-numeric: tabular-nums; }
+.phone.music-full .clock-zone { top: 85px; display: flex; justify-content: center; gap: 21px; align-items: baseline; }
+.phone.music-full .date-text { order: 2; font-size: 19px; }
+.phone.music-full .clock-text { order: 1; font-size: 27px; font-weight: 700; letter-spacing: -.05em; padding: 0; }
+.notification-layer { position: absolute; left: 20px; right: 20px; z-index: 4; touch-action: none; cursor: grab; user-select: none; }
+.notification-layer:active { cursor: grabbing; }
+.drag-hint { display: none; width: max-content; margin: 0 auto 8px; font-size: 10px; font-weight: 700; background: rgba(22,22,22,.45); color: rgba(255,255,255,.9); padding: 5px 8px; border-radius: 999px; backdrop-filter: blur(10px); }
+.notification-layer:hover .drag-hint { display: block; }
+.group-stack { position: relative; padding-top: 0; margin-bottom: 11px; }
+.stack-shadow { position: absolute; left: 8px; right: 8px; top: 6px; height: calc(100% - 2px); border-radius: 17px; background: rgba(244,246,250,.50); border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(20px); }
+.stack-shadow.second { top: 12px; left: 14px; right: 14px; background: rgba(231,235,242,.34); }
+.notification-card { position: relative; min-height: 77px; padding: 11px 12px; display: grid; grid-template-columns: 34px 1fr auto; gap: 9px; border-radius: 17px; background: rgba(244,246,252,.79); color: #15171a; border: 1px solid rgba(255,255,255,.62); box-shadow: 0 7px 18px rgba(0,0,0,.13); backdrop-filter: blur(24px) saturate(1.4); }
+.app-icon { width: 31px; height: 31px; border-radius: 8px; object-fit: cover; background: #eee; align-self: start; }
+.notification-app-name { font-size: 11px; color: #53575c; font-weight: 720; line-height: 1.2; }.notification-time { font-size: 10px; color: #65686d; white-space: nowrap; font-weight: 600; }
+.notification-sender { font-weight: 780; font-size: 13px; line-height: 1.25; }.notification-message { font-size: 12px; line-height: 1.35; margin-top: 2px; color: #282a2d; word-break: keep-all; }
+.notification-count { font-size: 10px; padding: 2px 5px; margin-left: 4px; background: rgba(42,46,52,.12); border-radius: 999px; color: #3f4349; }
+.empty-notification { color: rgba(255,255,255,.86); font-size: 12px; text-align: center; text-shadow: 0 1px 6px rgba(0,0,0,.45); padding: 16px 0; }
+.music-layer { position: absolute; z-index: 3; left: 17px; right: 17px; transition: opacity .2s, top .25s ease; }
+.phone:not(.music-full) .music-layer { top: var(--music-top, 360px); bottom: auto; }
+.phone.music-full .music-layer { top: 0; bottom: 92px; }
+.music-layer.hidden { display: none; }.music-player { border: 1px solid rgba(255,255,255,.38); background: rgba(54,62,89,.46); border-radius: 25px; padding: 15px 17px; backdrop-filter: blur(26px) saturate(1.25); box-shadow: 0 10px 26px rgba(0,0,0,.18); }
+.music-row { display: grid; grid-template-columns: 45px 1fr 22px; gap: 12px; align-items: center; }.mini-cover { width: 45px; height: 45px; border-radius: 8px; background: linear-gradient(135deg,#2d314d,#d3bbe6); background-size: cover; background-position: center; }
+.music-title { font-weight: 760; font-size: 15px; letter-spacing: -.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }.music-artist { color: rgba(255,255,255,.69); font-size: 14px; margin-top: 1px; }
+.music-wave { color: rgba(255,255,255,.72); font-size: 20px; text-align: right; }.progress-row { display: grid; grid-template-columns: 30px 1fr 35px; gap: 8px; align-items: center; color: rgba(255,255,255,.72); font-size: 10px; margin-top: 12px; }.progress-track { height: 5px; border-radius: 8px; background: rgba(255,255,255,.28); overflow: hidden; }.progress-fill { height: 100%; background: white; opacity: .8; }.music-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }.music-controls button { border: 0; background: none; color: #fff; font-size: 28px; padding: 0; line-height: 1; }.music-controls button.pause { font-size: 42px; }.music-controls button.small { color: rgba(255,255,255,.65); font-size: 26px; }
+.music-full-card { padding-top: 125px; }.album-art { width: calc(100% - 52px); max-width: 365px; aspect-ratio: 1; margin: 0 auto 24px; border-radius: 24px; background: linear-gradient(145deg,#272828,#121314); background-size: cover; background-position: center; box-shadow: 0 17px 36px rgba(0,0,0,.28); }.music-full-card .music-player { background: rgba(38,40,45,.63); }
+.phone.music-full .wallpaper-tint { background: rgba(18,19,21,.80); }
+.bottom-actions { position: absolute; left: 25px; right: 25px; bottom: 18px; height: 64px; z-index: 6; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; }
+.quick-action { width: 53px; height: 53px; border-radius: 50%; background: rgba(27,31,36,.48); box-shadow: 0 2px 12px rgba(0,0,0,.20) inset; backdrop-filter: blur(10px); display: grid; place-items: center; }.quick-action:last-child { justify-self: end; }.quick-action svg { width: 29px; height: 29px; fill: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.27)); }
+.home-indicator { width: 116px; height: 4px; border-radius: 999px; background: white; margin-bottom: 5px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.preview-help { margin: 14px 0 0; font-size: 12px; color: #766d66; text-align: center; }
+.hidden { display: none !important; }
+@media (max-width: 900px) { .workspace { grid-template-columns: 1fr; }.preview-column { position: static; order: -1; }.preview-label { margin-left: 0; justify-self: center; }.controls { max-width: 620px; width: 100%; justify-self: center; } }
+@media (max-width: 550px) { .app-shell { width: min(100% - 28px, 1280px); padding-top: 27px; }.page-header { align-items: center; }.save-button { padding: 11px 16px; }.phone { width: min(430px, calc(100vw - 54px)); }.phone-export { padding: 9px; border-radius: 48px; }.clock-text { font-size: 78px; }.workspace { padding-top: 23px; }.preview-column { order: -1; }.preview-label { margin-bottom: 10px; } }
+
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">FICTIONAL PHONE MAKER · LOCK SCREEN</p>
+        <h1>ScreenStory</h1>
+      </div>
+      <button class="save-button" id="savePng" type="button">PNG 저장</button>
+    </header>
+
+    <section class="workspace">
+      <aside class="controls" aria-label="잠금화면 설정">
+        <section class="panel-section">
+          <div class="section-heading"><span>01</span><h2>배경화면</h2></div>
+          <label class="upload-box" for="wallpaperInput">
+            <input id="wallpaperInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            <span class="upload-plus">＋</span>
+            <strong>사진 업로드</strong>
+            <small>JPG, PNG, WEBP</small>
+          </label>
+          <button class="text-button" id="resetWallpaper" type="button">기본 배경으로 되돌리기</button>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading"><span>02</span><h2>기본 정보</h2></div>
+          <div class="row two">
+            <label>시<input id="hourInput" type="number" min="0" max="23" value="7" /></label>
+            <label>분<input id="minuteInput" type="number" min="0" max="59" value="8" /></label>
+          </div>
+          <label>날짜<input id="dateInput" type="date" value="2026-07-06" /></label>
+          <label>통신사 / 왼쪽 표시 <input id="carrierInput" type="text" placeholder="예: Telekom.de" /></label>
+          <label>배터리 <span id="batteryValue">83%</span><input id="batteryInput" type="range" min="1" max="100" value="83" /></label>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading"><span>03</span><h2>알림</h2><button class="round-add" id="addNotification" type="button" aria-label="알림 추가">＋</button></div>
+          <p class="section-help">같은 앱 알림은 잠금화면에서 겹쳐진 스택 카드로 보임.</p>
+          <label>알림 위치 <span id="notificationPositionValue">중간</span><input id="notificationPosition" type="range" min="180" max="700" value="360" /></label>
+          <div id="notificationEditor" class="notification-editor"></div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading"><span>04</span><h2>음악 재생 화면</h2></div>
+          <label>표시 방식
+            <select id="musicMode">
+              <option value="none">표시 안 함</option>
+              <option value="mini">아래쪽 플레이어만</option>
+              <option value="full">앨범 커버 + 플레이어</option>
+            </select>
+          </label>
+          <label class="upload-inline" for="albumInput">앨범 커버 업로드<input id="albumInput" type="file" accept="image/png,image/jpeg,image/webp" hidden /><span>파일 선택</span></label>
+          <label>곡 제목<input id="songTitle" type="text" value="낭만 한도 초과" /></label>
+          <label>아티스트<input id="songArtist" type="text" value="하이키" /></label>
+          <div class="row two">
+            <label>현재 시간<input id="songElapsed" type="text" value="1:08" /></label>
+            <label>남은 시간<input id="songRemaining" type="text" value="−2:34" /></label>
+          </div>
+          <label>재생 진행률<input id="songProgress" type="range" min="0" max="100" value="37" /></label>
+        </section>
+      </aside>
+
+      <section class="preview-column">
+        <div class="preview-label">LIVE PREVIEW</div>
+        <div id="phoneExport" class="phone-export">
+          <div id="phone" class="phone">
+            <div id="wallpaper" class="wallpaper"></div>
+            <div class="wallpaper-tint"></div>
+
+            <div class="status-row">
+              <span id="carrierText" class="carrier-text"></span>
+              <div class="dynamic-island"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3"/><rect x="5.5" y="10" width="13" height="10" rx="2"/></svg></div>
+              <div class="status-icons" aria-hidden="true">
+                <svg class="signal" viewBox="0 0 24 24"><rect x="2" y="15" width="3" height="6" rx="1"/><rect x="7" y="11" width="3" height="10" rx="1"/><rect x="12" y="7" width="3" height="14" rx="1"/><rect x="17" y="3" width="3" height="18" rx="1"/></svg>
+                <svg class="wifi" viewBox="0 0 24 24"><path d="M2.5 9.5a14.5 14.5 0 0 1 19 0"/><path d="M6 13a9.5 9.5 0 0 1 12 0"/><path d="M9.5 16.5a4.5 4.5 0 0 1 5 0"/><circle cx="12" cy="20" r="1.6"/></svg>
+                <div class="battery-icon"><div id="batteryFill" class="battery-fill"></div></div>
+              </div>
+            </div>
+
+            <div id="clockZone" class="clock-zone">
+              <div id="dateText" class="date-text"></div>
+              <div id="clockText" class="clock-text">7:08</div>
+            </div>
+
+            <div id="notificationLayer" class="notification-layer" aria-label="알림 영역">
+              <div class="drag-hint">↕ 드래그해서 위치 조정</div>
+              <div id="notificationStack"></div>
+            </div>
+
+            <div id="musicLayer" class="music-layer hidden"></div>
+
+            <div class="bottom-actions" aria-hidden="true">
+              <div class="quick-action flashlight-icon">
+                <svg viewBox="0 0 32 32"><path d="M12 3h8l-1 8h-6l-1-8Zm0 10h8l-1 5v9H13v-9l-1-5Zm2 7h4v3h-4v-3Z"/></svg>
+              </div>
+              <div class="home-indicator"></div>
+              <div class="quick-action camera-icon">
+                <svg viewBox="0 0 32 32"><path d="M10 8 12 5h8l2 3h3a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3h3Zm6 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm0 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="preview-help">알림 영역을 드래그하거나 왼쪽 슬라이더로 위치를 바꿀 수 있음.</p>
+      </section>
+    </section>
+  </main>
+
+  <template id="notificationTemplate">
+    <article class="notification-form">
+      <div class="notification-title"><strong>알림 <span class="notification-number"></span></strong><button class="delete-notification" type="button">삭제</button></div>
+      <label>앱
+        <select class="notification-app">
+          <option value="kakao">카카오톡</option>
+          <option value="instagram">Instagram</option>
+          <option value="messages">메시지</option>
+          <option value="discord">Discord</option>
+          <option value="phone">전화</option>
+        </select>
+      </label>
+      <div class="phone-only hidden"><label>전화 알림 종류<select class="phone-kind"><option value="missed">부재중 전화</option></select></label></div>
+      <label>보낸 사람 / 채널<input class="notification-sender" type="text" placeholder="예: 유안" /></label>
+      <label>내용<textarea class="notification-message" rows="2" placeholder="예: 아직 안 잤어?"></textarea></label>
+      <label>표시 시간<input class="notification-time" type="text" value="지금" /></label>
+      <label class="app-icon-upload">커스텀 앱 아이콘<input class="notification-icon" type="file" accept="image/png,image/jpeg,image/webp" hidden /><span>이미지 선택</span></label>
+    </article>
+  </template>
+
+  <script src="html2canvas.min.js"></script>
+  <script>
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+const defaultWallpaper = '';
+const defaultAlbum = '';
+
+const state = {
+  wallpaper: defaultWallpaper,
+  hour: 7,
+  minute: 8,
+  date: '2026-07-06',
+  carrier: '',
+  battery: 83,
+  notificationY: 338,
+  musicMode: 'none',
+  album: defaultAlbum,
+  songTitle: '낭만 한도 초과',
+  songArtist: '하이키',
+  songElapsed: '1:08',
+  songRemaining: '−2:34',
+  songProgress: 37,
+  notifications: [],
+};
+
+const apps = {
+  kakao: { name: '카카오톡', icon: svgIcon('#FEE500', `<path fill="#3B2F19" d="M12 5.1c-4.6 0-8.3 2.75-8.3 6.14 0 2.15 1.5 4.03 3.77 5.14l-.96 3.48 4.04-2.66c.47.06.95.09 1.45.09 4.58 0 8.3-2.75 8.3-6.14S16.58 5.1 12 5.1Z"/>`) },
+  instagram: { name: 'Instagram', icon: svgIcon('url(#ig)', `<defs><linearGradient id="ig" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse"><stop stop-color="#FEDA75"/><stop offset=".45" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect x="5" y="5" width="14" height="14" rx="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="2"/><circle cx="17.2" cy="6.9" r="1.1" fill="#fff"/>`) },
+  messages: { name: '메시지', icon: svgIcon('#34C759', `<path d="M5 6.3A4.3 4.3 0 0 1 9.3 2h5.4A4.3 4.3 0 0 1 19 6.3v3.4A4.3 4.3 0 0 1 14.7 14H12l-4.4 3 .9-3.5A4.3 4.3 0 0 1 5 9.7V6.3Z" fill="#fff"/>`) },
+  discord: { name: 'Discord', icon: svgIcon('#5865F2', `<g transform="translate(0 1.15)"><path d="M7.3 7.2c2-1.48 7.35-1.48 9.35 0 .72 1.16 1.22 2.47 1.46 3.84-.96 1.2-2.3 2.19-3.9 2.81l-.48-.65c.58-.22 1.12-.5 1.6-.83-1.77.83-4.65.83-6.42 0 .48.33 1.02.61 1.6.83l-.48.65c-1.6-.62-2.94-1.6-3.9-2.81.24-1.37.74-2.68 1.46-3.84ZM9.6 10.7c.65 0 1.18-.62 1.18-1.38S10.25 7.94 9.6 7.94s-1.18.62-1.18 1.38.53 1.38 1.18 1.38Zm4.8 0c.65 0 1.18-.62 1.18-1.38s-.53-1.38-1.18-1.38-1.18.62-1.18 1.38.53 1.38 1.18 1.38Z" fill="#fff"/></g>`) },
+  phone: { name: '전화', icon: svgIcon('#34C759', `<path d="M7.1 3.7 9.5 7l-1.6 1.84c1.18 2.45 3.1 4.38 5.55 5.55L15.3 12.8l3.3 2.38c.6.43.81 1.21.5 1.9l-.88 1.9c-.29.64-.96.98-1.65.85C9.42 18.5 5.5 14.58 4.17 7.43c-.13-.69.2-1.36.85-1.65l1.9-.88c.69-.31 1.47-.1 1.9.5Z" fill="#fff"/>`) },
+};
+
+function svgIcon(background, inside) {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="${background}"/>${inside}</svg>`)}`;
+}
+
+function escapeHTML(value = '') {
+  return value.replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
+}
+
+function parseDate(dateString) {
+  const date = new Date(`${dateString}T12:00:00`);
+  if (Number.isNaN(date)) return '';
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${weekdays[date.getDay()]})`;
+}
+
+function twoDigits(n) { return String(Math.max(0, Number(n) || 0)).padStart(2, '0'); }
+function timeText() { return `${Number(state.hour)}:${twoDigits(state.minute)}`; }
+function readFile(input, callback) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => callback(reader.result);
+  reader.readAsDataURL(file);
+}
+
+function renderNotificationEditor() {
+  const editor = $('#notificationEditor');
+  editor.innerHTML = '';
+  const template = $('#notificationTemplate');
+
+  state.notifications.forEach((notification, index) => {
+    const node = template.content.firstElementChild.cloneNode(true);
+    $('.notification-number', node).textContent = index + 1;
+    $('.notification-app', node).value = notification.app;
+    $('.notification-sender', node).value = notification.sender;
+    $('.notification-message', node).value = notification.message;
+    $('.notification-time', node).value = notification.time;
+    $('.phone-only', node).classList.toggle('hidden', notification.app !== 'phone');
+
+    $('.notification-app', node).addEventListener('change', event => {
+      notification.app = event.target.value;
+      if (notification.app === 'phone') {
+        notification.sender ||= '부재중 전화';
+        notification.message ||= '걸려온 전화';
+      }
+      renderNotificationEditor();
+      renderPhone();
+    });
+    $('.notification-sender', node).addEventListener('input', event => { notification.sender = event.target.value; renderPhone(); });
+    $('.notification-message', node).addEventListener('input', event => { notification.message = event.target.value; renderPhone(); });
+    $('.notification-time', node).addEventListener('input', event => { notification.time = event.target.value; renderPhone(); });
+    $('.notification-icon', node).addEventListener('change', event => readFile(event.target, data => { notification.icon = data; renderPhone(); }));
+    $('.delete-notification', node).addEventListener('click', () => {
+      state.notifications = state.notifications.filter(item => item.id !== notification.id);
+      renderNotificationEditor();
+      renderPhone();
+    });
+    editor.append(node);
+  });
+}
+
+function renderNotifications() {
+  const stack = $('#notificationStack');
+  if (state.musicMode === 'full') {
+    stack.innerHTML = '';
+    return;
+  }
+  if (!state.notifications.length) {
+    stack.innerHTML = '';
+    return;
+  }
+  const groups = [];
+  state.notifications.forEach(notification => {
+    const current = groups.find(group => group.app === notification.app);
+    if (current) current.items.push(notification); else groups.push({ app: notification.app, items: [notification] });
+  });
+  stack.innerHTML = groups.map(group => {
+    const latest = group.items[group.items.length - 1];
+    const app = apps[latest.app];
+    const count = group.items.length;
+    const icon = latest.icon || app.icon;
+    const isMissed = latest.app === 'phone';
+    const sender = isMissed ? '부재중 전화' : latest.sender || app.name;
+    const message = isMissed ? `${latest.sender || '알 수 없음'}${latest.message ? ` · ${latest.message}` : '에게서 걸려온 전화'}` : latest.message;
+    return `<div class="group-stack">
+      ${count > 1 ? '<div class="stack-shadow second"></div><div class="stack-shadow"></div>' : ''}
+      <article class="notification-card">
+        <img class="app-icon" src="${icon}" alt="" />
+        <div>
+          <div class="notification-app-name">${escapeHTML(app.name)}${count > 1 ? `<span class="notification-count">${count}개</span>` : ''}</div>
+          <div class="notification-sender">${escapeHTML(sender)}</div>
+          <div class="notification-message">${escapeHTML(message || '')}</div>
+        </div>
+        <span class="notification-time">${escapeHTML(latest.time || '')}</span>
+      </article>
+    </div>`;
+  }).join('');
+}
+
+function musicMarkup() {
+  if (state.musicMode === 'none') return '';
+  const coverStyle = state.album ? `style="background-image:url('${state.album}')"` : '';
+  const player = `<div class="music-player">
+    <div class="music-row">
+      <div class="mini-cover" ${coverStyle}></div>
+      <div><div class="music-title">${escapeHTML(state.songTitle || '제목 없음')}</div><div class="music-artist">${escapeHTML(state.songArtist || '아티스트')}</div></div>
+      <div class="music-wave">▥</div>
+    </div>
+    <div class="progress-row"><span>${escapeHTML(state.songElapsed)}</span><div class="progress-track"><div class="progress-fill" style="width:${state.songProgress}%"></div></div><span>${escapeHTML(state.songRemaining)}</span></div>
+    <div class="music-controls"><button class="small" type="button" tabindex="-1">☆</button><button type="button" tabindex="-1">◀◀</button><button class="pause" type="button" tabindex="-1">Ⅱ</button><button type="button" tabindex="-1">▶▶</button><button class="small" type="button" tabindex="-1">◉</button></div>
+  </div>`;
+  if (state.musicMode === 'mini') return `<div class="music-mini">${player}</div>`;
+  return `<div class="music-full-card"><div class="album-art" ${coverStyle}></div>${player}</div>`;
+}
+
+function renderPhone() {
+  const phone = $('#phone');
+  phone.classList.toggle('music-full', state.musicMode === 'full');
+  $('#wallpaper').style.backgroundImage = state.wallpaper ? `url('${state.wallpaper}')` : '';
+  $('#clockText').textContent = timeText();
+  $('#dateText').textContent = parseDate(state.date);
+  $('#carrierText').textContent = state.carrier;
+  $('#batteryFill').style.width = `${state.battery}%`;
+  const needsRoomForMiniPlayer = state.musicMode === 'mini' && state.notifications.length > 0;
+  const displayedNotificationY = needsRoomForMiniPlayer ? Math.max(500, state.notificationY) : state.notificationY;
+  $('#notificationLayer').style.top = `${displayedNotificationY}px`;
+  const percent = Math.round(state.battery);
+  $('#batteryValue').textContent = `${percent}%`;
+  $('#notificationPositionValue').textContent = displayedNotificationY < 300 ? '위쪽' : displayedNotificationY > 510 ? '아래쪽' : '중간';
+  renderNotifications();
+  const music = $('#musicLayer');
+  music.classList.toggle('hidden', state.musicMode === 'none');
+  music.innerHTML = musicMarkup();
+  if (state.musicMode === 'mini') {
+    const musicTop = state.notifications.length ? Math.max(185, displayedNotificationY - 188) : 462;
+    music.style.setProperty('--music-top', `${musicTop}px`);
+  } else {
+    music.style.removeProperty('--music-top');
+  }
+}
+
+function bindControls() {
+  $('#wallpaperInput').addEventListener('change', event => readFile(event.target, data => { state.wallpaper = data; renderPhone(); }));
+  $('#resetWallpaper').addEventListener('click', () => { state.wallpaper = defaultWallpaper; $('#wallpaperInput').value = ''; renderPhone(); });
+  $('#hourInput').addEventListener('input', event => { state.hour = Math.min(23, Math.max(0, event.target.value)); renderPhone(); });
+  $('#minuteInput').addEventListener('input', event => { state.minute = Math.min(59, Math.max(0, event.target.value)); renderPhone(); });
+  $('#dateInput').addEventListener('input', event => { state.date = event.target.value; renderPhone(); });
+  $('#carrierInput').addEventListener('input', event => { state.carrier = event.target.value; renderPhone(); });
+  $('#batteryInput').addEventListener('input', event => { state.battery = event.target.value; renderPhone(); });
+  $('#notificationPosition').addEventListener('input', event => { state.notificationY = Number(event.target.value); renderPhone(); });
+  $('#addNotification').addEventListener('click', () => {
+    state.notifications.push({ id: crypto.randomUUID(), app: 'kakao', sender: '', message: '', time: '지금', icon: '' });
+    if (state.musicMode === 'mini') {
+      state.notificationY = Math.max(500, state.notificationY);
+      $('#notificationPosition').value = state.notificationY;
+    }
+    renderNotificationEditor();
+    renderPhone();
+  });
+
+  $('#musicMode').addEventListener('change', event => {
+    state.musicMode = event.target.value;
+    if (state.musicMode === 'mini' && state.notifications.length) {
+      state.notificationY = Math.max(500, state.notificationY);
+      $('#notificationPosition').value = state.notificationY;
+    }
+    renderPhone();
+  });
+  $('#albumInput').addEventListener('change', event => readFile(event.target, data => { state.album = data; renderPhone(); }));
+  $('#songTitle').addEventListener('input', event => { state.songTitle = event.target.value; renderPhone(); });
+  $('#songArtist').addEventListener('input', event => { state.songArtist = event.target.value; renderPhone(); });
+  $('#songElapsed').addEventListener('input', event => { state.songElapsed = event.target.value; renderPhone(); });
+  $('#songRemaining').addEventListener('input', event => { state.songRemaining = event.target.value; renderPhone(); });
+  $('#songProgress').addEventListener('input', event => { state.songProgress = event.target.value; renderPhone(); });
+
+  $('#savePng').addEventListener('click', async () => {
+    const button = $('#savePng');
+    const old = button.textContent;
+    button.textContent = '저장 중…';
+    try {
+      const canvas = await html2canvas($('#phoneExport'), { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+      const link = document.createElement('a');
+      link.download = `screenstory-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (error) {
+      alert('PNG 저장에 실패했어. 새로고침 후 다시 시도해봐.');
+      console.error(error);
+    } finally { button.textContent = old; }
+  });
+
+  const layer = $('#notificationLayer');
+  let drag = null;
+  layer.addEventListener('pointerdown', event => {
+    if (state.musicMode === 'full') return;
+    drag = { startY: event.clientY, startTop: state.notificationY };
+    layer.setPointerCapture(event.pointerId);
+  });
+  layer.addEventListener('pointermove', event => {
+    if (!drag) return;
+    const minimum = state.musicMode === 'mini' && state.notifications.length ? 500 : 180;
+    const next = Math.min(700, Math.max(minimum, drag.startTop + event.clientY - drag.startY));
+    state.notificationY = Math.round(next);
+    $('#notificationPosition').value = state.notificationY;
+    renderPhone();
+  });
+  layer.addEventListener('pointerup', () => { drag = null; });
+  layer.addEventListener('pointercancel', () => { drag = null; });
+}
+
+renderNotificationEditor();
+bindControls();
+renderPhone();
+
+  </script>
+</body>
+</html>
