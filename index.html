@@ -495,5 +495,99 @@
       renderPhone();
     })();
   </script>
+<!-- ScreenStory v16: status bar + formal wording patch -->
+<style>
+  /* Keep the top-right indicators clear of the Dynamic Island. */
+  .dynamic-island {
+    width: 164px !important;
+    height: 56px !important;
+    top: 16px !important;
+    z-index: 11 !important;
+  }
+
+  .status-row {
+    top: 23px !important;
+    left: 25px !important;
+    right: 18px !important;
+    min-height: 22px !important;
+    display: block !important;
+    z-index: 12 !important;
+    overflow: visible !important;
+  }
+
+  .credit-text {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 126px !important;
+    line-height: 22px !important;
+  }
+
+  .status-icons {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    height: 22px !important;
+    overflow: visible !important;
+  }
+
+  .signal-bars {
+    width: 24px !important;
+    height: 20px !important;
+    gap: 2.5px !important;
+    flex: 0 0 24px !important;
+  }
+
+  .signal-bars i {
+    width: 4px !important;
+  }
+
+  .status-icons .wifi-svg {
+    width: 24px !important;
+    height: 18px !important;
+    flex: 0 0 24px !important;
+  }
+
+  .status-icons .battery-svg {
+    width: 32px !important;
+    height: 18px !important;
+    flex: 0 0 32px !important;
+  }
+</style>
+
+<script>
+  (() => {
+    function useFormalHelpText() {
+      document.querySelectorAll('.section-help').forEach((element) => {
+        const text = element.textContent.trim();
+
+        if (text.includes('빈 배경 부분을 드래그')) {
+          element.textContent = '이미지를 업로드한 뒤 휴대폰의 빈 배경 영역을 드래그하면 화면에서 보이는 위치와 잘리는 부분을 조정할 수 있습니다.';
+        }
+
+        if (text.includes('알림 카드 영역을 직접')) {
+          element.textContent = '미리보기의 알림 카드 영역을 직접 위아래로 드래그하여 이동할 수 있습니다.';
+        }
+
+        if (text.includes('앨범 커버와 플레이어는')) {
+          element.textContent = '앨범 커버와 플레이어는 미리보기에서 각각 직접 드래그하여 이동할 수 있습니다.';
+        }
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', useFormalHelpText, { once: true });
+    } else {
+      useFormalHelpText();
+    }
+  })();
+</script>
+
 </body>
 </html>
