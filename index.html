@@ -116,7 +116,7 @@
     .music-player { width: 100%; padding: 16px 18px 15px; border-radius: 26px; background: linear-gradient(130deg, rgba(35,39,59,.82), rgba(56,62,91,.72)); border: 1px solid rgba(255,255,255,.36); box-shadow: 0 12px 23px rgba(0,0,0,.2); }
     .music-row { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 12px; align-items: center; }
     .mini-cover { width: 58px; height: 58px; border-radius: 12px; overflow: hidden; background: linear-gradient(140deg, #7d72af, #e4cdf7); }
-    .mini-cover img { display: none; width: 100%; height: 100%; object-fit: cover; }
+    .mini-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .music-title { overflow: hidden; color: #fff; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; font-weight: 700; letter-spacing: -.055em; }
     .music-artist { overflow: hidden; color: rgba(255,255,255,.72); text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 500; letter-spacing: -.04em; }
     .progress-row { display: grid; grid-template-columns: 38px 1fr 38px; gap: 8px; align-items: center; margin-top: 16px; color: rgba(255,255,255,.76); font-size: 12px; }
@@ -337,7 +337,7 @@
       }
 
       function playerMarkup() {
-        const cover = state.albumSrc ? `<img src="${state.albumSrc}" alt="" />` : '';
+        const cover = state.albumSrc ? `<img src="${state.albumSrc}" alt="" style="display:block" />` : '';
         return `<div class="music-player"><div class="music-row"><div class="mini-cover">${cover}</div><div><div class="music-title">${escapeHTML(state.songTitle || '제목 없음')}</div><div class="music-artist">${escapeHTML(state.songArtist || '아티스트')}</div></div></div><div class="progress-row"><span>${escapeHTML(state.songElapsed || '')}</span><div class="progress-track"><div class="progress-fill" style="width:${state.songProgress}%"></div></div><span>${escapeHTML(state.songRemaining || '')}</span></div><div class="music-controls"><span class="small">☆</span><span>◀◀</span><span class="pause">Ⅱ</span><span>▶▶</span><span class="small">◉</span></div></div>`;
       }
 
@@ -400,8 +400,14 @@
       function readFile(input, callback) {
         const file = input.files && input.files[0];
         if (!file) return;
+        if (file.type && !file.type.startsWith('image/')) {
+          alert('이미지 파일만 업로드할 수 있습니다.');
+          input.value = '';
+          return;
+        }
         const reader = new FileReader();
         reader.onload = () => callback(reader.result);
+        reader.onerror = () => alert('이미지를 읽지 못했습니다. 다른 PNG 또는 JPG 파일로 다시 시도해 주세요.');
         reader.readAsDataURL(file);
       }
 
@@ -581,7 +587,16 @@
         $('#addNotification').addEventListener('click', () => { state.notifications.push({ id: uid(), app: 'kakao', sender: '', message: '', time: '', icon: '' }); renderNotificationEditors(); renderPhone(); });
 
         $('#musicMode').addEventListener('change', event => { state.musicMode = event.target.value; syncMusicControls(); renderPhone(); });
-        $('#albumInput').addEventListener('change', event => readFile(event.target, src => { state.albumSrc = src; renderPhone(); }));
+        $('#albumInput').addEventListener('change', event => readFile(event.target, src => {
+          state.albumSrc = src;
+          /* Uploading a cover should be visible immediately, even before a display type was selected. */
+          if (state.musicMode === 'none') {
+            state.musicMode = 'full';
+            $('#musicMode').value = 'full';
+            syncMusicControls();
+          }
+          renderPhone();
+        }));
         [['#songTitle','songTitle'], ['#songArtist','songArtist'], ['#songElapsed','songElapsed'], ['#songRemaining','songRemaining']].forEach(([selector, key]) => $(selector).addEventListener('input', event => { state[key] = event.target.value; renderPhone(); }));
         $('#songProgress').addEventListener('input', event => { state.songProgress = Number(event.target.value); renderPhone(); });
         bindRange('#miniPosition', 'miniY', 180, 730); bindRange('#albumPosition', 'albumY', 190, 520); bindRange('#fullPlayerPosition', 'fullPlayerY', 420, 760);
