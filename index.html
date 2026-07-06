@@ -474,7 +474,7 @@
 
         $('#notificationMode').addEventListener('change', event => { state.notificationMode = event.target.value; renderPhone(); });
         bindRange('#notificationPosition', 'notificationY', 250, 710);
-        $('#addNotification').addEventListener('click', () => { state.notifications.push({ id: uid(), app: 'kakao', sender: '이자현', message: '주무십니까?', time: '지금', icon: '' }); renderNotificationEditors(); renderPhone(); });
+        $('#addNotification').addEventListener('click', () => { state.notifications.push({ id: uid(), app: 'kakao', sender: '이자헌', message: '주무십니까?', time: '지금', icon: '' }); renderNotificationEditors(); renderPhone(); });
 
         $('#musicMode').addEventListener('change', event => { state.musicMode = event.target.value; syncMusicControls(); renderPhone(); });
         $('#albumInput').addEventListener('change', event => readFile(event.target, src => { state.albumSrc = src; renderPhone(); }));
@@ -495,99 +495,326 @@
       renderPhone();
     })();
   </script>
-<!-- ScreenStory v16: status bar + formal wording patch -->
-<style>
-  /* Keep the top-right indicators clear of the Dynamic Island. */
-  .dynamic-island {
-    width: 164px !important;
-    height: 56px !important;
-    top: 16px !important;
-    z-index: 11 !important;
+<!-- ScreenStory v16 UI + PNG export patch: paste immediately before </body> -->
+<style id="screenstory-v16-patch">
+  /* Status bar: keep credit, Dynamic Island, and signal group in separate lanes. */
+  .status-row {
+    top: 20px !important;
+    left: 20px !important;
+    right: 20px !important;
+    min-height: 28px !important;
+    z-index: 14 !important;
   }
 
-  .status-row {
-    top: 23px !important;
-    left: 25px !important;
-    right: 18px !important;
-    min-height: 22px !important;
-    display: block !important;
+  .dynamic-island {
+    top: 16px !important;
+    width: 174px !important;
+    height: 58px !important;
     z-index: 12 !important;
-    overflow: visible !important;
   }
 
   .credit-text {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 126px !important;
-    line-height: 22px !important;
+    width: 80px !important;
+    max-width: 80px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.05em !important;
   }
 
   .status-icons {
     position: absolute !important;
-    top: 0 !important;
+    top: 5px !important;
     right: 0 !important;
-    display: flex !important;
-    align-items: center !important;
+    width: 94px !important;
+    min-width: 94px !important;
+    margin-left: 0 !important;
+    gap: 7px !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-    width: auto !important;
-    height: 22px !important;
-    overflow: visible !important;
+    z-index: 15 !important;
   }
 
   .signal-bars {
-    width: 24px !important;
-    height: 20px !important;
-    gap: 2.5px !important;
-    flex: 0 0 24px !important;
+    width: 22px !important;
+    height: 18px !important;
+    gap: 2px !important;
   }
 
   .signal-bars i {
-    width: 4px !important;
+    width: 3.5px !important;
   }
 
-  .status-icons .wifi-svg {
+  .signal-bars i:nth-child(1) { height: 5px !important; }
+  .signal-bars i:nth-child(2) { height: 9px !important; }
+  .signal-bars i:nth-child(3) { height: 13px !important; }
+  .signal-bars i:nth-child(4) { height: 18px !important; }
+
+  .status-icons svg {
     width: 24px !important;
     height: 18px !important;
-    flex: 0 0 24px !important;
   }
 
   .status-icons .battery-svg {
-    width: 32px !important;
-    height: 18px !important;
-    flex: 0 0 32px !important;
+    width: 31px !important;
+  }
+
+  /* Lighter, less oversized lock-screen typography. */
+  .clock-block {
+    top: 124px !important;
+    text-shadow: 0 1px 5px rgba(0,0,0,.22) !important;
+  }
+
+  .date-text {
+    margin-bottom: 7px !important;
+    font-size: 21px !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  .time-text {
+    font-size: 106px !important;
+    font-weight: 350 !important;
+    letter-spacing: -0.10em !important;
+    line-height: .94 !important;
+    transform: translateX(-4px) !important;
+  }
+
+  /* More compact iOS-style notification cards. */
+  .notification-list {
+    gap: 9px !important;
+  }
+
+  .notification-stack {
+    min-height: 92px !important;
+  }
+
+  .stack-back {
+    top: calc(var(--depth) * 5px) !important;
+    left: calc(var(--depth) * 5px) !important;
+    right: calc(var(--depth) * 5px) !important;
+    height: 92px !important;
+    border-radius: 22px !important;
+  }
+
+  .notification-card {
+    min-height: 92px !important;
+    grid-template-columns: 45px minmax(0, 1fr) auto !important;
+    column-gap: 10px !important;
+    padding: 11px 14px !important;
+    border-radius: 22px !important;
+  }
+
+  .app-icon-holder,
+  .app-icon,
+  .app-icon-holder > img {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 13px !important;
+  }
+
+  .notification-app-name {
+    font-size: 12px !important;
+    font-weight: 650 !important;
+  }
+
+  .notification-title {
+    font-size: 17px !important;
+    font-weight: 720 !important;
+    line-height: 1.2 !important;
+  }
+
+  .notification-message {
+    font-size: 15px !important;
+    font-weight: 450 !important;
+    line-height: 1.25 !important;
+  }
+
+  .notification-time {
+    padding-top: 1px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  .music-title {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+  }
+
+  .music-artist {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+  }
+
+  label {
+    font-weight: 600 !important;
   }
 </style>
 
 <script>
-  (() => {
-    function useFormalHelpText() {
-      document.querySelectorAll('.section-help').forEach((element) => {
-        const text = element.textContent.trim();
+(() => {
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-        if (text.includes('빈 배경 부분을 드래그')) {
-          element.textContent = '이미지를 업로드한 뒤 휴대폰의 빈 배경 영역을 드래그하면 화면에서 보이는 위치와 잘리는 부분을 조정할 수 있습니다.';
-        }
+  function setHelpText() {
+    const wallpaperHelp = $('#wallpaperInput')?.closest('.panel-section')?.querySelector('.section-help');
+    const notificationHelp = $('#notificationPosition')?.closest('.panel-section')?.querySelector('.section-help');
+    const musicHelp = $('#musicMode')?.closest('.panel-section')?.querySelector('.section-help');
 
-        if (text.includes('알림 카드 영역을 직접')) {
-          element.textContent = '미리보기의 알림 카드 영역을 직접 위아래로 드래그하여 이동할 수 있습니다.';
-        }
-
-        if (text.includes('앨범 커버와 플레이어는')) {
-          element.textContent = '앨범 커버와 플레이어는 미리보기에서 각각 직접 드래그하여 이동할 수 있습니다.';
-        }
-      });
+    if (wallpaperHelp) {
+      wallpaperHelp.textContent =
+        '이미지를 업로드한 뒤 폰의 빈 배경 부분을 드래그하면, 화면에 보이는 위치와 잘리는 부분을 조정할 수 있습니다.';
     }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', useFormalHelpText, { once: true });
-    } else {
-      useFormalHelpText();
+    if (notificationHelp) {
+      notificationHelp.textContent =
+        '미리보기의 알림 카드 영역을 직접 위아래로 드래그하여 위치를 조정할 수 있습니다.';
     }
-  })();
+    if (musicHelp) {
+      musicHelp.textContent =
+        '앨범 커버와 플레이어는 미리보기에서 각각 직접 드래그하여 이동할 수 있습니다.';
+    }
+  }
+
+  function makeNewNotificationBlank() {
+    const addButton = $('#addNotification');
+    if (!addButton) return;
+
+    addButton.addEventListener('click', () => {
+      setTimeout(() => {
+        const editor = $$('.notification-editor').at(-1);
+        if (!editor) return;
+
+        [['.n-sender', ''], ['.n-message', ''], ['.n-time', '']].forEach(([selector, value]) => {
+          const input = $(selector, editor);
+          if (!input) return;
+          input.value = value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      }, 0);
+    });
+  }
+
+  function clearPhoneDefaults() {
+    document.addEventListener('change', event => {
+      if (!event.target.matches('.n-app') || event.target.value !== 'phone') return;
+
+      setTimeout(() => {
+        const editor = event.target.closest('.notification-editor');
+        if (!editor) return;
+
+        ['.n-sender', '.n-message'].forEach(selector => {
+          const input = $(selector, editor);
+          if (!input) return;
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      }, 0);
+    });
+  }
+
+  function compactStackHeights() {
+    $$('.notification-stack').forEach(stack => {
+      const backCount = $$('.stack-back', stack).length;
+      stack.style.setProperty('min-height', `${92 + backCount * 5}px`, 'important');
+    });
+  }
+
+  function replacePngExport() {
+    const oldButton = $('#savePng');
+    const phone = $('#phone');
+    if (!oldButton || !phone) return;
+
+    const button = oldButton.cloneNode(true);
+    oldButton.replaceWith(button);
+
+    const waitForImage = image => new Promise(resolve => {
+      const source = image.getAttribute('src');
+
+      /* Empty or hidden image slots must not block PNG export forever. */
+      if (!source || image.complete) {
+        resolve();
+        return;
+      }
+
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        image.removeEventListener('load', done);
+        image.removeEventListener('error', done);
+        resolve();
+      };
+
+      image.addEventListener('load', done, { once: true });
+      image.addEventListener('error', done, { once: true });
+      window.setTimeout(done, 5000);
+    });
+
+    button.addEventListener('click', async () => {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = '저장 중…';
+
+      try {
+        if (!window.html2canvas) {
+          throw new Error('html2canvas.min.js 파일을 찾을 수 없습니다. 해당 파일은 저장소에 그대로 유지해 주세요.');
+        }
+
+        await Promise.all($$('img', phone).map(waitForImage));
+        document.body.classList.add('exporting');
+        await new Promise(requestAnimationFrame);
+
+        const canvas = await Promise.race([
+          window.html2canvas(phone, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+            logging: false,
+            imageTimeout: 8000,
+            onclone: clonedDocument => {
+              clonedDocument
+                .querySelectorAll('.notification-card, .music-player')
+                .forEach(card => {
+                  card.style.backdropFilter = 'none';
+                  card.style.webkitBackdropFilter = 'none';
+                });
+            }
+          }),
+          new Promise((_, reject) => {
+            window.setTimeout(() => reject(new Error('PNG 생성 시간이 너무 오래 걸립니다. 이미지를 다시 업로드한 뒤 재시도해 주세요.')), 25000);
+          })
+        ]);
+
+        const link = document.createElement('a');
+        link.download = `screenstory-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        alert(error?.message || 'PNG 저장 중 문제가 발생했습니다.');
+      } finally {
+        document.body.classList.remove('exporting');
+        button.disabled = false;
+        button.textContent = originalText || 'PNG 저장';
+      }
+    });
+  }
+
+  setHelpText();
+  makeNewNotificationBlank();
+  clearPhoneDefaults();
+  compactStackHeights();
+
+  const observer = new MutationObserver(compactStackHeights);
+  const list = $('#notificationList');
+  if (list) observer.observe(list, { childList: true, subtree: true });
+
+  replacePngExport();
+})();
 </script>
+
 
 </body>
 </html>
