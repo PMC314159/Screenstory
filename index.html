@@ -815,6 +815,49 @@
 })();
 </script>
 
+<!-- ScreenStory credit wrap patch: paste immediately before </body>, below any earlier patches -->
+<style id="screenstory-credit-wrap-patch">
+  /*
+    Keep the credit entirely inside the left lane.
+    It may grow downward onto additional lines, but it never runs under the Dynamic Island.
+  */
+  .status-row {
+    align-items: flex-start !important;
+    overflow: visible !important;
+  }
 
+  .credit-text {
+    position: absolute !important;
+    left: 0 !important;
+    top: 4px !important;
+    width: 94px !important;
+    max-width: 94px !important;
+
+    /* Remove the old ellipsis/one-line behavior. */
+    min-height: 0 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+
+    /* Allow Korean names, @handles, commas, and long words to wrap safely. */
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    line-break: anywhere !important;
+
+    color: rgba(255,255,255,.97) !important;
+    font-size: 10px !important;
+    font-weight: 650 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.055em !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,.34) !important;
+  }
+
+  /* The phone-status icons remain in their own fixed lane at the right. */
+  .status-icons {
+    top: 5px !important;
+    right: 0 !important;
+  }
+</style>
+  
 </body>
 </html>
