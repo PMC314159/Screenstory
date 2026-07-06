@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ScreenStory — Character Lock Screen Maker</title>
-  <!-- v21: status indicators vertically aligned with Dynamic Island -->
+  <!-- v22: canvas-drawn device bezel for consistent PNG exports -->
   <style>
     :root {
       --paper: #f6f5f2;
@@ -486,9 +486,65 @@
         });
       }
 
+      function roundedRectPath(context, x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+        context.beginPath();
+        context.moveTo(x + r, y);
+        context.arcTo(x + width, y, x + width, y + height, r);
+        context.arcTo(x + width, y + height, x, y + height, r);
+        context.arcTo(x, y + height, x, y, r);
+        context.arcTo(x, y, x + width, y, r);
+        context.closePath();
+      }
+
+      /*
+        html2canvas occasionally ignores a parent div's CSS padding/gradient
+        on some browsers. Instead of trusting it to draw the black device
+        bezel, draw the bezel directly onto the final PNG canvas ourselves.
+      */
+      function addDeviceBezel(innerCanvas, frame, phone) {
+        const frameStyle = getComputedStyle(frame);
+        const phoneStyle = getComputedStyle(phone);
+        const scale = innerCanvas.width / phone.clientWidth;
+
+        const outerWidth = Math.round(frame.clientWidth * scale);
+        const outerHeight = Math.round(frame.clientHeight * scale);
+        const padLeft = Math.round((parseFloat(frameStyle.paddingLeft) || 10) * scale);
+        const padTop = Math.round((parseFloat(frameStyle.paddingTop) || 10) * scale);
+        const outerRadius = Math.round((parseFloat(frameStyle.borderTopLeftRadius) || 64) * scale);
+        const innerRadius = Math.round((parseFloat(phoneStyle.borderTopLeftRadius) || 55) * scale);
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = outerWidth;
+        finalCanvas.height = outerHeight;
+
+        const context = finalCanvas.getContext('2d');
+        context.clearRect(0, 0, outerWidth, outerHeight);
+
+        /* Match the dark device frame from the preview, without relying on CSS. */
+        const bezelGradient = context.createLinearGradient(0, 0, outerWidth, outerHeight);
+        bezelGradient.addColorStop(0, '#252627');
+        bezelGradient.addColorStop(.58, '#070707');
+        bezelGradient.addColorStop(1, '#202020');
+
+        roundedRectPath(context, 0, 0, outerWidth, outerHeight, outerRadius);
+        context.fillStyle = bezelGradient;
+        context.fill();
+
+        /* Clip the rendered lock screen to its own rounded corners. */
+        context.save();
+        roundedRectPath(context, padLeft, padTop, innerCanvas.width, innerCanvas.height, innerRadius);
+        context.clip();
+        context.drawImage(innerCanvas, padLeft, padTop);
+        context.restore();
+
+        return finalCanvas;
+      }
+
       async function exportPng() {
         const button = $('#savePng');
         const frame = $('.phone-frame');
+        const phone = $('#phone');
         const originalText = button.textContent || 'PNG 저장';
 
         button.disabled = true;
@@ -509,17 +565,17 @@
           }
           await nextFrame();
           await nextFrame();
-          await waitForVisibleImages(frame);
+          await waitForVisibleImages(phone);
 
           document.body.classList.add('exporting');
-          frame.classList.add('screenstory-exporting');
 
           /*
-            Capture the outer frame, not just #phone.
-            This preserves the black bezel in the downloaded PNG.
+            First capture only the lock-screen area.
+            Then add the black outer device bezel with Canvas, which makes
+            the border appear consistently on every browser.
           */
-          const canvas = await withTimeout(
-            window.html2canvas(frame, {
+          const innerCanvas = await withTimeout(
+            window.html2canvas(phone, {
               scale: 2,
               backgroundColor: null,
               useCORS: true,
@@ -528,19 +584,13 @@
               imageTimeout: 6000,
               removeContainer: true,
               onclone: clonedDocument => {
-                const clonedFrame = clonedDocument.querySelector('.phone-frame');
-                if (clonedFrame) {
-                  clonedFrame.style.boxShadow = 'none';
-                  clonedFrame.style.overflow = 'hidden';
-                }
-
                 /* Avoid a grid pattern from unsupported backdrop filters. */
                 clonedDocument.querySelectorAll('.notification-card, .music-player').forEach(card => {
                   card.style.backdropFilter = 'none';
                   card.style.webkitBackdropFilter = 'none';
                 });
 
-                /* Keep uploaded images visible in the capture and hide truly empty slots. */
+                /* Hide truly empty image slots so they cannot delay rendering. */
                 clonedDocument.querySelectorAll('img').forEach(image => {
                   const src = image.getAttribute('src') || '';
                   if (!src.trim()) image.style.display = 'none';
@@ -551,7 +601,8 @@
             'PNG 생성 시간이 너무 오래 걸립니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.'
           );
 
-          const blob = await withTimeout(canvasToBlob(canvas), 7000, 'PNG 파일을 준비하지 못했습니다.');
+          const finalCanvas = addDeviceBezel(innerCanvas, frame, phone);
+          const blob = await withTimeout(canvasToBlob(finalCanvas), 7000, 'PNG 파일을 준비하지 못했습니다.');
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
@@ -564,7 +615,6 @@
           alert(error?.message || 'PNG 저장 중 문제가 발생했습니다.');
         } finally {
           document.body.classList.remove('exporting');
-          frame.classList.remove('screenstory-exporting');
           button.disabled = false;
           button.textContent = originalText;
         }
