@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ScreenStory — Character Lock Screen Maker</title>
+  <!-- v21: status indicators vertically aligned with Dynamic Island -->
   <style>
     :root {
       --paper: #f6f5f2;
@@ -77,7 +78,7 @@
     }
     .dynamic-island { position: absolute; top: 16px; left: 50%; z-index: 12; width: 174px; height: 58px; transform: translateX(-50%); border-radius: 34px; background: #000; display: grid; place-items: center; }
     .lock-icon { width: 18px; height: 22px; }
-    .status-icons { position: absolute; top: 5px; right: 0; z-index: 15; display: flex; align-items: center; gap: 7px; width: 94px; min-width: 94px; justify-content: flex-end; }
+    .status-icons { position: absolute; top: 16px; right: 0; z-index: 15; display: flex; align-items: center; gap: 7px; width: 94px; min-width: 94px; justify-content: flex-end; }
     .signal-bars { display: inline-flex; align-items: flex-end; gap: 2px; width: 22px; height: 18px; filter: drop-shadow(0 1px 3px rgba(0,0,0,.3)); }
     .signal-bars i { display: block; width: 3.5px; border-radius: 3px 3px 1px 1px; background: #fff; }
     .signal-bars i:nth-child(1) { height: 5px; }
