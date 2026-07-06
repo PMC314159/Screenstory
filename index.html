@@ -256,7 +256,35 @@ input[type="range"] { width: 100%; accent-color: #9a6e5d; }
   .phone { border-radius: 46px; }
 }
 
-  </style>
+  
+
+/* PNG export: html2canvas cannot faithfully rasterize backdrop-filter.
+   Use a stable glass approximation only during export to avoid checkerboard tiles. */
+#phone.exporting .notification-card,
+#phone.exporting .stack-shadow,
+#phone.exporting .music-player,
+#phone.exporting .quick-action {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#phone.exporting .notification-card {
+  background: linear-gradient(135deg, rgba(250,252,255,.84), rgba(225,230,242,.74)) !important;
+  border-color: rgba(255,255,255,.80) !important;
+}
+#phone.exporting .stack-shadow {
+  background: rgba(230,235,246,.56) !important;
+  border-color: rgba(255,255,255,.60) !important;
+}
+#phone.exporting .stack-shadow.second {
+  background: rgba(220,226,239,.42) !important;
+}
+#phone.exporting .music-player {
+  background: linear-gradient(135deg, rgba(47,54,80,.82), rgba(31,36,56,.78)) !important;
+}
+#phone.exporting .quick-action {
+  background: rgba(21,24,29,.76) !important;
+}
+</style>
 </head>
 <body>
   <main class="app-shell">
@@ -813,6 +841,9 @@ function bindControls() {
     try {
       // 업로드한 배경·앨범·앱 아이콘이 전부 로드된 뒤 저장한다.
       restoreImages = await prepareImagesForExport();
+      const exportPhone = $('#phone');
+      exportPhone.classList.add('exporting');
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const canvas = await html2canvas($('#phoneExport'), {
         backgroundColor: null,
         scale: 2,
@@ -821,6 +852,7 @@ function bindControls() {
         imageTimeout: 15000,
         logging: false,
       });
+      exportPhone.classList.remove('exporting');
       const link = document.createElement('a');
       link.download = `screenstory-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -829,6 +861,7 @@ function bindControls() {
       alert('PNG 저장에 실패했어. 새로고침 후 다시 시도해봐.');
       console.error(error);
     } finally {
+      $('#phone')?.classList.remove('exporting');
       restoreImages();
       button.textContent = old;
     }
